@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/time.h>
 
 
 #include "search_fatlobyte.hpp"
@@ -53,6 +54,8 @@ char const * getFile(char const *filename)
 
 int main(int argc, char **argv)
 {
+    struct timeval start_tv, end_tv;
+
     // Texte werden geladen
     char const *textfilenames[] = {
         "main.cpp",
@@ -75,6 +78,8 @@ int main(int argc, char **argv)
   SearchFatLobyte search;
 
   //Zeitmessung startet
+  gettimeofday(&start_tv, 0);
+
    search.addText( "text 1", texts[0] );
    search.addText( "text 2", texts[1] );
    search.addText( "text 3", texts[2] );
@@ -90,7 +95,12 @@ int main(int argc, char **argv)
    search.seek( "test_output2.txt" );
 
    // Zeitmessung endet
+  gettimeofday(&end_tv, 0);
 
+    double duration = (end_tv.tv_sec - start_tv.tv_sec)*1e6 +
+        (end_tv.tv_usec - start_tv.tv_usec);
+
+    std::cout<<"Search operation took "<<duration<<" microseconds.\n";
 
     return EXIT_SUCCESS;
    //Destruktor läuft
