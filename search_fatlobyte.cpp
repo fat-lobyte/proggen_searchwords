@@ -2,6 +2,10 @@
 
 #include "search_fatlobyte.hpp"
 
+#include <cstring>
+#include <iostream>
+#include <fstream>
+
 /*
  *   proggen_searchtexts
  *   Copyright (C) 2011  Alexander Korsunsky
@@ -20,18 +24,38 @@
 */
 
 
-void SearchFatLobyte::addText( char const * id, char const * text )
-{ /* Implementierung */ }
-
-void SearchFatLobyte::addPattern( char const * pattern )
-{ /* Implementierung */ }
-
-void SearchFatLobyte::clearPatterns( void )
-{ /* Implementierung */ }
-
 int SearchFatLobyte::seek( char const * filename )
 {
-    return 0;
+    int num_hits = 0;
+
+    std::ofstream found_file(filename);
+    if (!found_file)
+    {
+        perror("Failed to open output file");
+        std::cerr<<"Aborting search\n";
+        return 0;
+    }
+
+    for (std::vector<std::pair<char const *,char const *> >::const_iterator text_it =
+        _texts.begin(); text_it != _texts.end(); ++text_it)
+    {
+        bool was_found = false;
+
+        for (std::vector<char const *>::const_iterator pat_it = _patterns.begin();
+            pat_it != _patterns.end(); ++pat_it)
+        {
+            const char *found_pointer = text_it->second;
+            while (found_pointer = std::strstr(found_pointer, *pat_it))
+            {
+                ++found_pointer;
+                ++num_hits;
+                was_found = true;
+            }
+        }
+
+        if(was_found) found_file<<text_it->first<<'\n';
+    }
+    return num_hits;
 }
 
 

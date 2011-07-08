@@ -53,6 +53,7 @@ char const * getFile(char const *filename)
 
 int main(int argc, char **argv)
 {
+    // Texte werden geladen
     char const *textfilenames[] = {
         "main.cpp",
         "searchbase.hpp",
@@ -61,33 +62,32 @@ int main(int argc, char **argv)
         "Makefile"
     };
 
+    // array with pointers to the texts, initialize them with NULL
     char const *texts[5];
     memset(reinterpret_cast<void*>(texts), 0, 5);
 
     for (unsigned i = 0; i < 5; ++i)
     {
         texts[i] = getFile(textfilenames[i]);
-        if (!texts[i])
-            return EXIT_FAILURE;
+        if (!texts[i]) return EXIT_FAILURE;
     }
 
-  // Texte werden geladen
   SearchFatLobyte search;
 
   //Zeitmessung startet
-   search.addText( "text 1", texts[1] );
-   search.addText( "text 2", texts[2] );
-   search.addText( "text 3", texts[3] );
-   search.addText( "text 4", texts[4] );
-   search.addText( "text 5", texts[5] );
+   search.addText( "text 1", texts[0] );
+   search.addText( "text 2", texts[1] );
+   search.addText( "text 3", texts[2] );
+   search.addText( "text 4", texts[3] );
+   search.addText( "text 5", texts[4] );
 
    search.addPattern( "Hallo" );
    search.addPattern( "Welt" );
-   search.seek( "xin/test1.txt" );
+   search.seek( "test_output1.txt" );
    search.clearPatterns();
    search.addPattern( "Hello" );
    search.addPattern( "World" );
-   search.seek( "xin/test2.txt" );
+   search.seek( "test_output2.txt" );
 
    // Zeitmessung endet
 
