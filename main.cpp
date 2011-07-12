@@ -32,8 +32,8 @@ char const * getFile(char const *filename)
     if (filebuf == MAP_FAILED)
     {
         perror("Failed to map file");
-        return NULL;
         close(fd);
+        return NULL;
     }
 
     textbuf = (char*) malloc(filesize + 1);
@@ -58,11 +58,11 @@ int main(int argc, char **argv)
 
     // Texte werden geladen
     char const *textfilenames[] = {
-        "main.cpp",
-        "searchbase.hpp",
-        "search_fatlobyte.cpp",
-        "search_fatlobyte.hpp",
-        "Makefile"
+        "txt/en-macbeth.txt",
+        "txt/ger-dieverwandlung.txt",
+        "txt/ger-faust.txt",
+        "txt/ger-iphigenie.txt",
+        "txt/ger-logik.txt"
     };
 
     // array with pointers to the texts, initialize them with NULL
@@ -80,11 +80,11 @@ int main(int argc, char **argv)
   //Zeitmessung startet
   gettimeofday(&start_tv, 0);
 
-   search.addText( "text 1", texts[0] );
-   search.addText( "text 2", texts[1] );
-   search.addText( "text 3", texts[2] );
-   search.addText( "text 4", texts[3] );
-   search.addText( "text 5", texts[4] );
+   search.addText( "Shakespeare - Macbeth", texts[0] );
+   search.addText( "Kafka - Die Verwandlung", texts[1] );
+   search.addText( "Goethe - Faust", texts[2] );
+   search.addText( "Goethe - Iphigenie auf Tauris", texts[3] );
+   search.addText( "Hegel - Wissenschaft der Logik", texts[4] );
 
    search.addPattern( "Hallo" );
    search.addPattern( "Welt" );
