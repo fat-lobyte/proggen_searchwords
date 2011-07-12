@@ -10,11 +10,11 @@ all: $(TARGETS)
 searchwords_%: main.o search_%.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-.PHONY: clean clean_output
-
+.PHONY: clean
 clean: clean_output
 	rm -rf $(TARGETS) *.o
 
+.PHONY: clean_output
 clean_output:
 	rm -rf $(OUTFILES)
 
