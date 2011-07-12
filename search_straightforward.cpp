@@ -26,17 +26,6 @@
 #include <algorithm>
 
 
-struct SearchPattern
-{
-    char const* _pattern;
-    std::size_t _length;
-
-    SearchPattern() = default;
-    SearchPattern(char const* pattern)
-        : _pattern(pattern), _length(strlen(pattern))
-    {}
-};
-
 int SearchFatLobyte::seek( char const * filename )
 {
     std::ofstream found_file(filename);
@@ -46,14 +35,6 @@ int SearchFatLobyte::seek( char const * filename )
         std::cerr<<"Aborting search\n";
         return 0;
     }
-
-    std::size_t num_patterns = _patterns.size();
-    SearchPattern* patterns = new SearchPattern[num_patterns];
-    std::transform(
-        _patterns.begin(), _patterns.end(), // range
-        patterns, // to
-        [](char const* p_str) { return SearchPattern(p_str); } //
-    );
 
 
     for (auto& cur_text: _texts)
@@ -88,8 +69,6 @@ int SearchFatLobyte::seek( char const * filename )
             <<'\n';
 
     }
-
-    delete[] patterns;
 
     return std::accumulate(_texts.begin(), _texts.end(), std::size_t(0), // begin, end, init
         [](std::size_t& acc, decltype(*_texts.begin()) el) // binary_op
