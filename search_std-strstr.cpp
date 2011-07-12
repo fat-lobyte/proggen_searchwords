@@ -24,7 +24,6 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 int SearchFatLobyte::seek( char const * filename )
 {
     std::ofstream found_file(filename);
