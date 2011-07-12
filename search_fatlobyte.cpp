@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <numeric>
 
 /*
  *   proggen_searchtexts
@@ -26,8 +27,6 @@
 
 int SearchFatLobyte::seek( char const * filename )
 {
-    int num_hits = 0;
-
     std::ofstream found_file(filename);
     if (!found_file)
     {
@@ -36,25 +35,26 @@ int SearchFatLobyte::seek( char const * filename )
         return 0;
     }
 
-    for (auto text_it = _texts.begin(); text_it != _texts.end(); ++text_it)
+    for (auto& cur_text: _texts)
     {
-        bool was_found = false;
-
-        for (auto pat_it = _patterns.begin();
-            pat_it != _patterns.end(); ++pat_it)
+        for (auto& cur_pat : _patterns)
         {
-            const char *found_pointer = std::get<1>(*text_it);
-            while (found_pointer = std::strstr(found_pointer, *pat_it))
+            const char *found_pointer = std::get<1>(cur_text);
+            while (found_pointer = std::strstr(found_pointer, cur_pat))
             {
-                ++found_pointer;
-                ++num_hits;
-                was_found = true;
+                ++found_pointer; // increment so we aren't stuck on first hit
+                ++std::get<2>(cur_text); // increment hit counter
             }
         }
 
-        if(was_found) found_file<<std::get<0>(*text_it)<<'\n';
+        if (std::get<2>(cur_text)) found_file<<std::get<0>(cur_text)<<'\n';
+
     }
-    return num_hits;
+
+    return std::accumulate(_texts.begin(), _texts.end(), std::size_t(0), // begin, end, init
+        [](std::size_t& acc, decltype(*_texts.begin()) el) // binary_op
+            { return acc + std::get<2>(el); }
+    );
 }
 
 

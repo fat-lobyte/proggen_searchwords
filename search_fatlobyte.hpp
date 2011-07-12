@@ -23,7 +23,7 @@
 
 class SearchFatLobyte : public SearchBase
 {
-    std::vector<std::tuple<char const *,char const *, bool> > _texts;
+    std::vector<std::tuple<char const *,char const *, std::size_t> > _texts;
     std::vector<char const *> _patterns;
 
 public:
