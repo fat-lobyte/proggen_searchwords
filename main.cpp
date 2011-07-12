@@ -100,7 +100,13 @@ int main(int argc, char **argv)
     double duration = (end_tv.tv_sec - start_tv.tv_sec)*1e6 +
         (end_tv.tv_usec - start_tv.tv_usec);
 
-    std::cout<<"Search operation took "<<duration<<" microseconds.\n";
+    std::cout.precision(3);
+    if (duration < 1e3)
+        std::cout<<"Search operation took "<<duration<<" microseconds.\n";
+    else if(duration < 1e6)
+        std::cout<<"Search operation took "<<duration/1e3<<" milliseconds.\n";
+    else
+        std::cout<<"Search operation took "<<duration/1e6<<" seconds.\n";
 
     return EXIT_SUCCESS;
    //Destruktor läuft
