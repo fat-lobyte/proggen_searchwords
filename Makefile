@@ -2,7 +2,7 @@
 CXXFLAGS += -std=c++0x
 OUTFILES = test_output1.txt test_output2.txt
 
-VARIANTS = std-strstr
+VARIANTS = std-strstr straightforward
 TARGETS =  $(foreach var,$(VARIANTS),searchwords_$(var))
 
 all: $(TARGETS)

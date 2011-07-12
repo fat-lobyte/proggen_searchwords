@@ -1,11 +1,4 @@
-// search_fatlobyte.cpp
-
-#include "search_fatlobyte.hpp"
-
-#include <cstring>
-#include <iostream>
-#include <fstream>
-#include <numeric>
+// search_std-strstr.cpp
 
 /*
  *   proggen_searchtexts
@@ -23,6 +16,13 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include "search_fatlobyte.hpp"
+
+#include <cstring>
+#include <iostream>
+#include <fstream>
+#include <numeric>
 
 int SearchFatLobyte::seek( char const * filename )
 {
@@ -46,7 +46,9 @@ int SearchFatLobyte::seek( char const * filename )
             }
         }
 
-        if (std::get<2>(cur_text)) found_file<<std::get<0>(cur_text)<<'\n';
+        if (std::get<2>(cur_text))
+            found_file<<std::get<0>(cur_text)<<'\t'<<+std::get<2>(cur_text)
+            <<'\n';
 
     }
 
