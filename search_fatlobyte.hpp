@@ -18,17 +18,17 @@
 */
 
 #include <vector>
-#include <utility>
+#include <tuple>
 #include "searchbase.hpp"
 
 class SearchFatLobyte : public SearchBase
 {
-    std::vector<std::pair<char const *,char const *> > _texts;
+    std::vector<std::tuple<char const *,char const *, bool> > _texts;
     std::vector<char const *> _patterns;
 
 public:
     void addText( char const * id, char const * text )
-    { _texts.push_back(std::make_pair(id,text)); }
+    { _texts.push_back(std::make_tuple(id,text,false)); }
 
     void addPattern( char const * pattern )
     { _patterns.push_back(pattern); }

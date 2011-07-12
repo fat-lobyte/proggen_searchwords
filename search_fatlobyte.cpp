@@ -36,15 +36,14 @@ int SearchFatLobyte::seek( char const * filename )
         return 0;
     }
 
-    for (std::vector<std::pair<char const *,char const *> >::const_iterator text_it =
-        _texts.begin(); text_it != _texts.end(); ++text_it)
+    for (auto text_it = _texts.begin(); text_it != _texts.end(); ++text_it)
     {
         bool was_found = false;
 
-        for (std::vector<char const *>::const_iterator pat_it = _patterns.begin();
+        for (auto pat_it = _patterns.begin();
             pat_it != _patterns.end(); ++pat_it)
         {
-            const char *found_pointer = text_it->second;
+            const char *found_pointer = std::get<1>(*text_it);
             while (found_pointer = std::strstr(found_pointer, *pat_it))
             {
                 ++found_pointer;
@@ -53,7 +52,7 @@ int SearchFatLobyte::seek( char const * filename )
             }
         }
 
-        if(was_found) found_file<<text_it->first<<'\n';
+        if(was_found) found_file<<std::get<0>(*text_it)<<'\n';
     }
     return num_hits;
 }
