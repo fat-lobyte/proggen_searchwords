@@ -38,23 +38,21 @@ int SearchFatLobyte::seek( char const * filename )
     {
         for (auto& cur_pat : _patterns)
         {
-            const char *found_pointer = std::get<1>(cur_text);
+            const char *found_pointer = cur_text.text;
             while (found_pointer = std::strstr(found_pointer, cur_pat))
             {
                 ++found_pointer; // increment so we aren't stuck on first hit
-                ++std::get<2>(cur_text); // increment hit counter
+                ++cur_text.hit_count;
             }
         }
 
-        if (std::get<2>(cur_text))
-            found_file<<std::get<0>(cur_text)<<'\t'<<+std::get<2>(cur_text)
-            <<'\n';
+        if (cur_text.hit_count)
+            found_file<<cur_text.id<<'\t'<<cur_text.hit_count<<'\n';
 
     }
 
     return std::accumulate(_texts.begin(), _texts.end(), std::size_t(0), // begin, end, init
-        [](std::size_t& acc, decltype(*_texts.begin()) el) // binary_op
-            { return acc + std::get<2>(el); }
+        [](std::size_t& acc, TextInfo& el) { return acc + el.hit_count; }
     );
 }
 

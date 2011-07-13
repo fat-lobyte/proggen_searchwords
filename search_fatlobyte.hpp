@@ -18,17 +18,23 @@
 */
 
 #include <vector>
-#include <tuple>
 #include "searchbase.hpp"
+
+struct TextInfo
+{
+    char const* id;
+    char const* text;
+    std::size_t hit_count;
+};
 
 class SearchFatLobyte : public SearchBase
 {
-    std::vector<std::tuple<char const *,char const *, std::size_t> > _texts;
+    std::vector<TextInfo> _texts;
     std::vector<char const *> _patterns;
 
 public:
     void addText( char const * id, char const * text )
-    { _texts.push_back(std::make_tuple(id,text,false)); }
+    { _texts.push_back({id, text, 0}); }
 
     void addPattern( char const * pattern )
     { _patterns.push_back(pattern); }
