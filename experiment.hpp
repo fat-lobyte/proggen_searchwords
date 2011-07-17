@@ -22,12 +22,16 @@
 
 // C-Library
 #include <cstring>
+#include <cmath>
 
 // C++-Library
+#include <iostream>
 #include <utility>
 #include <vector>
+#include <valarray>
 #include <map>
 #include <memory>
+#include <numeric>
 
 // POSIX-Library
 #include <sys/types.h>
@@ -71,10 +75,60 @@ std::shared_ptr<char> readFile(char const *filename);
 
 struct ExperimentStatistics
 {
+    ExperimentStatistics(const std::vector<double>& data)
+    {
+        N = data.size();
+        mean = std::accumulate(data.begin(), data.end(), 0.0d);
+        mean /= N;
+
+        std_dev = sqrt(
+            std::accumulate(data.begin(), data.end(), 0.0d,
+                [&mean](double sum, double val)
+                {return sum +(mean - val)*(mean - val);}
+            )
+        );
+    }
+
+    ExperimentStatistics(const ExperimentStatistics& other) = default;
+
+    void display()
+    {
+        std::cout.precision(3);
+        std::cout<<"Experiment with N = "<<N<<":\n"<<"\tAverage: ";
+        if (mean < 1e3)
+            std::cout<<mean<<" microseconds.\n";
+        else if(mean < 1e6)
+            std::cout<<mean/1e3<<" milliseconds.\n";
+        else
+            std::cout<<mean/1e6<<" seconds.\n";
+
+        std::cout<<"\tStandard deviation: ";
+        if (std_dev < 1e3)
+            std::cout<<std_dev<<" microseconds.\n";
+        else if(std_dev < 1e6)
+            std::cout<<std_dev/1e3<<" milliseconds.\n";
+        else
+            std::cout<<std_dev/1e6<<" seconds.\n";
+
+        std::cout<<"\tRelat. standard deviation: "<<std_dev/mean*100<<"%\n";
+    }
+
     std::size_t N;
     double mean;
     double std_dev;
 };
+
+
+// This is the "ugly" but parsable version of displaying the statistical data
+inline
+std::ostream& operator << (std::ostream& os, const ExperimentStatistics& stats)
+{
+    return os<<
+        "N:"<<stats.N<<';'<<
+        "Mean:"<<stats.mean<<';'<<
+        "StdDev:"<<stats.std_dev;
+}
+
 
 template <typename Candidate>
 class Experiment
@@ -98,6 +152,11 @@ public:
     Experiment(std::vector<input_t> input, searches_t searches);
 
     void conductExperiment(std::size_t N);
+
+    ExperimentStatistics getStatistics()
+    {
+        return ExperimentStatistics(_durations);
+    }
 
 private:
     std::vector<text_t> _input_data;
