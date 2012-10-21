@@ -5,7 +5,7 @@ CXXFLAGS += -std=c++0x -fno-deduce-init-list
 
 OUTFILES = test_output1.txt test_output2.txt
 
-VARIANTS = std-strstr straightforward blockwise
+VARIANTS = std-strstr straightforward
 TARGETS =  $(foreach var,$(VARIANTS),searchwords_$(var))
 
 all: $(TARGETS)
