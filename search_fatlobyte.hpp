@@ -33,14 +33,11 @@ class SearchFatLobyte : public SearchBase
     std::vector<char const *> _patterns;
 
 public:
-    void addText( char const * id, char const * text )
-    { _texts.push_back({id, text, 0}); }
+    void addText( char const * id, char const * text );
 
-    void addPattern( char const * pattern )
-    { _patterns.push_back(pattern); }
+    void addPattern( char const * pattern );
 
-    void clearPatterns( void )
-    { _patterns.clear(); }
+    void clearPatterns( void );
 
     int seek( char const * filename );
 

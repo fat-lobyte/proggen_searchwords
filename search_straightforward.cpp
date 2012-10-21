@@ -25,6 +25,15 @@
 #include <numeric>
 #include <algorithm>
 
+void SearchFatLobyte::addText( char const * id, char const * text )
+{ _texts.push_back({id, text, 0}); }
+
+void SearchFatLobyte::addPattern( char const * pattern )
+{ _patterns.push_back(pattern); }
+
+void SearchFatLobyte::clearPatterns( void )
+{ _patterns.clear(); }
+
 
 int SearchFatLobyte::seek( char const * filename )
 {
@@ -37,6 +46,7 @@ int SearchFatLobyte::seek( char const * filename )
     }
 
 
+    #pragma omp paralell for
     for (auto& cur_text: _texts)
     {
         for (auto& cur_pat : _patterns)
