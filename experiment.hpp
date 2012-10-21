@@ -83,7 +83,7 @@ struct ExperimentStatistics
 
         std_dev = sqrt(
             std::accumulate(data.begin(), data.end(), 0.0d,
-                [&mean](double sum, double val)
+                [this](double sum, double val)
                 {return sum +(mean - val)*(mean - val);}
             )
         );
