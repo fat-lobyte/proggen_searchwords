@@ -3,6 +3,25 @@
 
 int main(int argc, char **argv)
 {
+    std::size_t N = 30;
+
+    for(std::size_t i=1; i < argc; ++i)
+    {
+        if (!strcmp(argv[i], "-n"))
+        {
+            if (!(i+1 < argc))
+            {
+                std::cerr<<"Missing argument for \"-n\"\n";
+                exit(EXIT_FAILURE);
+            }
+            else if (!(N = atoi(argv[i+1])))
+            {
+                std::cerr<<"Invalid argument for \"-n\"\n";
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
     Experiment<SearchFatLobyte> experiment(
         {// std::vector<std::pair<const char* /*id*/, const char* /*filename*/>>
             {"Shakespeare - Macbeth", "txt/en-macbeth.txt"},
@@ -17,13 +36,13 @@ int main(int argc, char **argv)
         }
     );
 
-    experiment.conductExperiment(30);
+    experiment.conductExperiment(N);
 
-    ExperimentStatistics stats = experiment.getInitStatistics();
-    stats.display();
+    ExperimentStatistics(experiment._durations_init, "Adding Texts").display();
 
-    stats = experiment.getSearchStatistics();
-    stats.display();
+
+    ExperimentStatistics(experiment._durations_search, "Adding Texts").display();
+
 
     return 0;
 }

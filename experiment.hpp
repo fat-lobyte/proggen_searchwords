@@ -73,6 +73,16 @@ struct ArrayDeleter
 
 std::shared_ptr<char> readFile(char const *filename);
 
+inline void nicedisp(std::ostream& os, double value)
+{
+        if (value < 1e3)
+            os<<value<<" microseconds";
+        else if(value < 1e6)
+            os<<value/1e3<<" milliseconds";
+        else
+            os<<value/1e6<<" seconds";
+}
+
 struct ExperimentStatistics
 {
     ExperimentStatistics(const std::vector<double>& data, const std::string& name_ = std::string())
@@ -96,20 +106,12 @@ struct ExperimentStatistics
     {
         std::cout.precision(3);
         std::cout<<"Experiment"<<name<<" with N = "<<N<<":\n"<<"\tAverage: ";
-        if (mean < 1e3)
-            std::cout<<mean<<" microseconds.\n";
-        else if(mean < 1e6)
-            std::cout<<mean/1e3<<" milliseconds.\n";
-        else
-            std::cout<<mean/1e6<<" seconds.\n";
+        nicedisp(std::cout, mean);
+        std::cout<<".\n";
 
         std::cout<<"\tStandard deviation: ";
-        if (std_dev < 1e3)
-            std::cout<<std_dev<<" microseconds.\n";
-        else if(std_dev < 1e6)
-            std::cout<<std_dev/1e3<<" milliseconds.\n";
-        else
-            std::cout<<std_dev/1e6<<" seconds.\n";
+        nicedisp(std::cout, std_dev);
+        std::cout<<".\n";
 
         std::cout<<"\tRelat. standard deviation: "<<std_dev/mean*100<<"%\n";
     }
@@ -155,20 +157,12 @@ public:
 
     void conductExperiment(std::size_t N);
 
-    ExperimentStatistics getInitStatistics()
-    {
-        return ExperimentStatistics(_durations_init, "Adding Texts");
-    }
+    std::vector<double> _durations_init;
+    std::vector<double> _durations_search;
 
-    ExperimentStatistics getSearchStatistics()
-    {
-        return ExperimentStatistics(_durations_search, "Searching Patterns");
-    }
 private:
     std::vector<text_t> _input_data;
     searches_t _searches;
-    std::vector<double> _durations_init;
-    std::vector<double> _durations_search;
 };
 
 template <typename Candidate>
