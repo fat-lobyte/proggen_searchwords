@@ -24,12 +24,31 @@
 #include <fstream>
 #include <numeric>
 
+struct TextInfo
+{
+    char const* id;
+    char const* text;
+    std::size_t hit_count;
+};
+
+struct PatternInfo {
+    char const* pattern;
+};
+
 
 void SearchFatLobyte::addText( char const * id, char const * text )
-{ _texts.push_back({id, text, {}, 0}); }
+{
+    _texts.emplace_back(
+        new TextInfo{id, text, 0ul}
+    );
+}
 
 void SearchFatLobyte::addPattern( char const * pattern )
-{ _patterns.push_back(pattern); }
+{
+    _patterns.emplace_back(
+        new PatternInfo{pattern}
+    );
+}
 
 void SearchFatLobyte::clearPatterns( void )
 { _patterns.clear(); }
@@ -48,23 +67,23 @@ int SearchFatLobyte::seek( char const * filename )
     {
         for (auto& cur_pat : _patterns)
         {
-            const char *found_pointer = cur_text.text;
-            while (found_pointer = std::strstr(found_pointer, cur_pat))
+            const char *found_pointer = cur_text->text;
+            while (found_pointer = std::strstr(found_pointer, cur_pat->pattern))
             {
                 ++found_pointer; // increment so we aren't stuck on first hit
-                ++cur_text.hit_count;
+                ++cur_text->hit_count;
             }
         }
 
-        if (cur_text.hit_count)
-            found_file<<cur_text.id<<'\t'<<cur_text.hit_count<<'\n';
+        if (cur_text->hit_count)
+            found_file<<cur_text->id<<'\t'<<cur_text->hit_count<<'\n';
 
     }
 
     return std::accumulate(_texts.begin(), _texts.end(), std::size_t(0), // begin, end, init
-        [](std::size_t& acc, TextInfo& el) { return acc + el.hit_count; }
+        [](std::size_t& acc, std::unique_ptr<TextInfo>& el) { return acc + el->hit_count; }
     );
 }
 
-
-
+SearchFatLobyte::SearchFatLobyte() {}
+SearchFatLobyte::~SearchFatLobyte() {}

@@ -22,26 +22,19 @@
 #include <map>
 #include "searchbase.hpp"
 
+
 struct TextInfo;
 struct PatternInfo;
 
-typedef std::map<char, std::vector<std::size_t>> indexmap_t;
-
-struct TextInfo
-{
-    char const* id;
-    char const* text;
-    indexmap_t indexmap;
-    std::size_t hit_count;
-};
-
-
 class SearchFatLobyte : public SearchBase
 {
-    std::vector<TextInfo> _texts;
-    std::vector<char const *> _patterns;
+    std::vector<std::unique_ptr<TextInfo>> _texts;
+    std::vector<std::unique_ptr<PatternInfo>> _patterns;
 
 public:
+    SearchFatLobyte();
+    virtual ~SearchFatLobyte();
+
     void addText( char const * id, char const * text );
 
     void addPattern( char const * pattern );
@@ -49,7 +42,5 @@ public:
     void clearPatterns( void );
 
     int seek( char const * filename );
-
-    virtual ~SearchFatLobyte() {}
 };
 

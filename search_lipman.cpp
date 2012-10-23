@@ -26,6 +26,20 @@
 #include <algorithm>
 
 
+typedef std::map<char, std::vector<std::size_t>> indexmap_t;
+
+struct TextInfo
+{
+    char const* id;
+    indexmap_t indexmap;
+    std::size_t hit_count;
+};
+
+struct PatternInfo {
+    char const* pattern;
+};
+
+
 indexmap_t preparse(const char* text)
 {
     indexmap_t indexmap;
@@ -42,11 +56,17 @@ indexmap_t preparse(const char* text)
 
 void SearchFatLobyte::addText( char const * id, char const * text )
 {
-    _texts.push_back({id, nullptr, preparse(text), 0});
+    _texts.emplace_back(
+        new TextInfo{id, preparse(text), 0}
+    );
 }
 
 void SearchFatLobyte::addPattern( char const * pattern )
-{ _patterns.push_back(pattern); }
+{
+    _patterns.emplace_back(
+        new PatternInfo{pattern}
+    );
+}
 
 void SearchFatLobyte::clearPatterns( void )
 { _patterns.clear(); }
@@ -122,8 +142,8 @@ int SearchFatLobyte::seek( char const * filename )
 
     for (auto& cur_text: _texts)
     {
-        //std::cout<<" ###### Index for "<<cur_text.id<<" ###### ";
-        //print_indexmap(cur_text.indexmap);
+        //std::cout<<" ###### Index for "<<cur_text->id<<" ###### ";
+        //print_indexmap(cur_text->indexmap);
 
         for (auto& cur_pat : _patterns)
         {
@@ -131,28 +151,28 @@ int SearchFatLobyte::seek( char const * filename )
 
             // if the first character is not part of the text,
             // we didn't find anything!
-            if (!cur_text.indexmap.count(cur_pat[0])) continue;
+            if (!cur_text->indexmap.count(cur_pat->pattern[0])) continue;
 
             // otherwise, check all indices for the first character
-            for (std::size_t offset: cur_text.indexmap[cur_pat[0]])
+            for (std::size_t offset: cur_text->indexmap[cur_pat->pattern[0]])
             {
                 // perform the subsearch, report positives
-                if (subsearch(cur_text.indexmap, offset, 1, cur_pat))
-                    ++cur_text.hit_count;
+                if (subsearch(cur_text->indexmap, offset, 1, cur_pat->pattern))
+                    ++cur_text->hit_count;
 
             }
 
         }
 
-        if (cur_text.hit_count)
-            found_file<<cur_text.id<<'\t'<<cur_text.hit_count<<'\n';
+        if (cur_text->hit_count)
+            found_file<<cur_text->id<<'\t'<<cur_text->hit_count<<'\n';
 
     }
 
     return std::accumulate(_texts.begin(), _texts.end(), std::size_t(0), // begin, end, init
-        [](std::size_t& acc, TextInfo& el) { return acc + el.hit_count; }
+        [](std::size_t& acc, std::unique_ptr<TextInfo>& el) { return acc + el->hit_count; }
     );
 }
 
-
-
+SearchFatLobyte::SearchFatLobyte() {}
+SearchFatLobyte::~SearchFatLobyte() {}

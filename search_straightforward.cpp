@@ -25,11 +25,32 @@
 #include <numeric>
 #include <algorithm>
 
+
+struct TextInfo
+{
+    char const* id;
+    char const* text;
+    std::size_t hit_count;
+};
+
+struct PatternInfo {
+    char const* pattern;
+};
+
+
 void SearchFatLobyte::addText( char const * id, char const * text )
-{ _texts.push_back({id, text, {}, 0}); }
+{
+    _texts.emplace_back(
+        new TextInfo{id, text, 0}
+    );
+}
 
 void SearchFatLobyte::addPattern( char const * pattern )
-{ _patterns.push_back(pattern); }
+{
+    _patterns.emplace_back(
+        new PatternInfo{pattern}
+    );
+}
 
 void SearchFatLobyte::clearPatterns( void )
 { _patterns.clear(); }
@@ -45,17 +66,15 @@ int SearchFatLobyte::seek( char const * filename )
         return 0;
     }
 
-
-    #pragma omp paralell for
     for (auto& cur_text: _texts)
     {
         for (auto& cur_pat : _patterns)
         {
-            char const* text_ptr = cur_text.text;
+            char const* text_ptr = cur_text->text;
 
             while (*text_ptr != '\0')
             {
-                char const* pattern_ptr = cur_pat;
+                char const* pattern_ptr = cur_pat->pattern;
 
                 while(*pattern_ptr == *text_ptr)
                 {
@@ -66,7 +85,7 @@ int SearchFatLobyte::seek( char const * filename )
                 // if we reached this point and pattern_ptr points to '\0', we have a hit
                 if (!*pattern_ptr)
                 {
-                    ++cur_text.hit_count; // increment hit counter
+                    ++cur_text->hit_count; // increment hit counter
                     continue; //, we allready incremented the text_ptr
                 }
 
@@ -74,15 +93,15 @@ int SearchFatLobyte::seek( char const * filename )
             }
         }
 
-        if (cur_text.hit_count)
-            found_file<<cur_text.id<<'\t'<<cur_text.hit_count<<'\n';
+        if (cur_text->hit_count)
+            found_file<<cur_text->id<<'\t'<<cur_text->hit_count<<'\n';
 
     }
 
     return std::accumulate(_texts.begin(), _texts.end(), std::size_t(0), // begin, end, init
-        [](std::size_t& acc, TextInfo& el) { return acc + el.hit_count; }
+        [](std::size_t& acc, std::unique_ptr<TextInfo>& el) { return acc + el->hit_count; }
     );
 }
 
-
-
+SearchFatLobyte::SearchFatLobyte() {}
+SearchFatLobyte::~SearchFatLobyte() {}
