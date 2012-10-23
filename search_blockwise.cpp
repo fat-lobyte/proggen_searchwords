@@ -108,7 +108,7 @@ inline std::size_t block_has_first_match(
 )
 {
     BlockType sum_block;
-    memset(&sum_block, 0, sizeof(BlockType)); // set to zero somehow
+    sum_block ^= sum_block; // xor, set to zero
 
     // unroll me, end condition is known at compile time
     for (std::size_t i = 0; i < sizeof(BlockType); ++i)
@@ -158,6 +158,8 @@ inline bool block_has_zero(BlockType block)
 {
     // ok, this _will_ perform crappy
     return memchr(reinterpret_cast<void*>(&block), '\0', sizeof(BlockType)) != NULL;
+
+    // use scas? only
 }
 
 typedef long long LargeBlock;

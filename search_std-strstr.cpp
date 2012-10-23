@@ -24,8 +24,9 @@
 #include <fstream>
 #include <numeric>
 
+
 void SearchFatLobyte::addText( char const * id, char const * text )
-{ _texts.push_back({id, text, 0}); }
+{ _texts.push_back({id, text, {}, 0}); }
 
 void SearchFatLobyte::addPattern( char const * pattern )
 { _patterns.push_back(pattern); }

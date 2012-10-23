@@ -17,15 +17,24 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <memory>
 #include <vector>
+#include <map>
 #include "searchbase.hpp"
+
+struct TextInfo;
+struct PatternInfo;
+
+typedef std::map<char, std::vector<std::size_t>> indexmap_t;
 
 struct TextInfo
 {
     char const* id;
     char const* text;
+    indexmap_t indexmap;
     std::size_t hit_count;
 };
+
 
 class SearchFatLobyte : public SearchBase
 {
@@ -40,7 +49,6 @@ public:
     void clearPatterns( void );
 
     int seek( char const * filename );
-
 
     virtual ~SearchFatLobyte() {}
 };
