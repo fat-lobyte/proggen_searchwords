@@ -19,7 +19,10 @@ int main(int argc, char **argv)
 
     experiment.conductExperiment(30);
 
-    ExperimentStatistics stats(experiment.getStatistics());
+    ExperimentStatistics stats = experiment.getInitStatistics();
+    stats.display();
+
+    stats = experiment.getSearchStatistics();
     stats.display();
 
     return 0;

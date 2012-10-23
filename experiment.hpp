@@ -75,7 +75,8 @@ std::shared_ptr<char> readFile(char const *filename);
 
 struct ExperimentStatistics
 {
-    ExperimentStatistics(const std::vector<double>& data)
+    ExperimentStatistics(const std::vector<double>& data, const std::string& name_ = std::string())
+        : name(name_)
     {
         N = data.size();
         mean = std::accumulate(data.begin(), data.end(), 0.0d);
@@ -94,7 +95,7 @@ struct ExperimentStatistics
     void display()
     {
         std::cout.precision(3);
-        std::cout<<"Experiment with N = "<<N<<":\n"<<"\tAverage: ";
+        std::cout<<"Experiment"<<name<<" with N = "<<N<<":\n"<<"\tAverage: ";
         if (mean < 1e3)
             std::cout<<mean<<" microseconds.\n";
         else if(mean < 1e6)
@@ -113,6 +114,7 @@ struct ExperimentStatistics
         std::cout<<"\tRelat. standard deviation: "<<std_dev/mean*100<<"%\n";
     }
 
+    std::string name;
     std::size_t N;
     double mean;
     double std_dev;
@@ -153,15 +155,20 @@ public:
 
     void conductExperiment(std::size_t N);
 
-    ExperimentStatistics getStatistics()
+    ExperimentStatistics getInitStatistics()
     {
-        return ExperimentStatistics(_durations);
+        return ExperimentStatistics(_durations_init, "Adding Texts");
     }
 
+    ExperimentStatistics getSearchStatistics()
+    {
+        return ExperimentStatistics(_durations_search, "Searching Patterns");
+    }
 private:
     std::vector<text_t> _input_data;
     searches_t _searches;
-    std::vector<double> _durations;
+    std::vector<double> _durations_init;
+    std::vector<double> _durations_search;
 };
 
 template <typename Candidate>
@@ -181,7 +188,7 @@ template <typename Candidate>
 void Experiment<Candidate>::conductExperiment(std::size_t N)
 {
     Candidate* candidate = NULL;
-    struct timeval start_tv, end_tv;
+    struct timeval start_tv, interm_tv, end_tv;
 
     for (std::size_t current_run = 0; current_run < N; ++current_run)
     {
@@ -195,6 +202,8 @@ void Experiment<Candidate>::conductExperiment(std::size_t N)
         {
             candidate->addText(text.first, text.second.get());
         }
+
+        gettimeofday(&interm_tv, 0);
 
         // perform search operations
         for (auto& outfile : _searches)
@@ -211,9 +220,13 @@ void Experiment<Candidate>::conductExperiment(std::size_t N)
         gettimeofday(&end_tv, 0);
 
         // push back microseconds
-        _durations.push_back(
-            (end_tv.tv_sec - start_tv.tv_sec) * 1e6 +
-            (end_tv.tv_usec - start_tv.tv_usec)
+        _durations_init.push_back(
+            (interm_tv.tv_sec - start_tv.tv_sec) * 1e6 +
+            (interm_tv.tv_usec - start_tv.tv_usec)
+        );
+        _durations_search.push_back(
+            (end_tv.tv_sec - interm_tv.tv_sec) * 1e6 +
+            (end_tv.tv_usec - interm_tv.tv_usec)
         );
 
         //Destruktor läuft
