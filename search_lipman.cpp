@@ -102,32 +102,44 @@ NEXT_POS:
     // if the currect character is unknown, return false
     if(!indexmap.count(next_char)) return false;
 
-    // do a binary search through our available indices, find the index greater
-    // than the offset
-    auto it = std::upper_bound(
+#if 1
+    // do a binary search through our available indices, check if the required
+    // position is present in the indices for this letter
+    auto it = std::lower_bound(
         indexmap[next_char].begin(), indexmap[next_char].end(), offset + pat_position
     );
 
-    if (it != indexmap[next_char].end())
+    // if the position was not found, we definitely don't have a match.
+    if (it == indexmap[next_char].end()) return false;
+
+    // lower_bound returns "the first element which does not compare less than value"
+    // This does not mean that we found the right one.
+    if (*it == offset + pat_position)
     {
         ++pat_position; // go to the next position in the pattern
         goto NEXT_POS;
     }
-#if 0
+    else
+        // if this loop finished, we ran out of viable indices at this level
+        return false;
+
+#else
     // loop through indices for this character
     for (std::size_t char_index: indexmap[next_char])
     {
         // only bother to continue search if the offset is still valid
         if(char_index - pat_position == offset)
         {
-
-            //return subsearch(indexmap, offset, pat_position, pattern);
+            ++pat_position;
+            //goto NEXT_POS;
+            return subsearch(indexmap, offset, pat_position, pattern);
         }
     }
+
+    return false;
 #endif
 
-    // if this loop finished, we ran out of viable indices at this level
-    return false;
+
 }
 
 int SearchFatLobyte::seek( char const * filename )
