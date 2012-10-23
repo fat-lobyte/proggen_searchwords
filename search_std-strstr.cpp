@@ -68,7 +68,7 @@ int SearchFatLobyte::seek( char const * filename )
         for (auto& cur_pat : _patterns)
         {
             const char *found_pointer = cur_text->text;
-            while (found_pointer = std::strstr(found_pointer, cur_pat->pattern))
+            while((found_pointer = std::strstr(found_pointer,cur_pat->pattern)))
             {
                 ++found_pointer; // increment so we aren't stuck on first hit
                 ++cur_text->hit_count;

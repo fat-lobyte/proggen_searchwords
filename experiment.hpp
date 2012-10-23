@@ -79,11 +79,11 @@ struct ExperimentStatistics
         : name(name_)
     {
         N = data.size();
-        mean = std::accumulate(data.begin(), data.end(), 0.0d);
+        mean = std::accumulate(data.begin(), data.end(), 0.0);
         mean /= N;
 
         std_dev = sqrt(
-            std::accumulate(data.begin(), data.end(), 0.0d,
+            std::accumulate(data.begin(), data.end(), 0.0,
                 [this](double sum, double val)
                 {return sum +(mean - val)*(mean - val);}
             )
@@ -187,7 +187,7 @@ Experiment<Candidate>::Experiment(
 template <typename Candidate>
 void Experiment<Candidate>::conductExperiment(std::size_t N)
 {
-    Candidate* candidate = NULL;
+    Candidate* candidate = nullptr;
     struct timeval start_tv, interm_tv, end_tv;
 
     for (std::size_t current_run = 0; current_run < N; ++current_run)
@@ -242,7 +242,7 @@ std::shared_ptr<char> readFile(char const *filename)
     if (fd == -1)
     {
         perror("Failed to open file for reading");
-        return NULL;
+        return nullptr;
     }
 
     filesize = lseek(fd, 0, SEEK_END);
@@ -253,7 +253,7 @@ std::shared_ptr<char> readFile(char const *filename)
     {
         perror("Failed to map file");
         close(fd);
-        return NULL;
+        return nullptr;
     }
 
     std::shared_ptr<char> textbuf(new char[filesize + 1], ArrayDeleter<char>());
