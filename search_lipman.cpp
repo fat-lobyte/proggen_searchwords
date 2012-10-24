@@ -92,54 +92,36 @@ bool subsearch(
 {
     // std::cout<<offset<<':'<<pat_position<<'\n';
     char next_char;
-NEXT_POS:
-    // get next character
-    next_char = pattern[pat_position];
+    auto indexmap_end = indexmap.end();
 
-    // if this is the end, we were successful
-    if (next_char == '\0') return true;
-
-    // if the currect character is unknown, return false
-    if(!indexmap.count(next_char)) return false;
-
-#if 1
-    // do a binary search through our available indices, check if the required
-    // position is present in the indices for this letter
-    auto it = std::lower_bound(
-        indexmap[next_char].begin(), indexmap[next_char].end(), offset + pat_position
-    );
-
-    // if the position was not found, we definitely don't have a match.
-    if (it == indexmap[next_char].end()) return false;
-
-    // lower_bound returns "the first element which does not compare less than value"
-    // This does not mean that we found the right one.
-    if (*it == offset + pat_position)
+    for (;; ++pat_position)
     {
-        ++pat_position; // go to the next position in the pattern
-        goto NEXT_POS;
-    }
-    else
-        // if this loop finished, we ran out of viable indices at this level
-        return false;
+        // get next character
+        next_char = pattern[pat_position];
 
-#else
-    // loop through indices for this character
-    for (std::size_t char_index: indexmap[next_char])
-    {
-        // only bother to continue search if the offset is still valid
-        if(char_index - pat_position == offset)
-        {
-            ++pat_position;
-            //goto NEXT_POS;
-            return subsearch(indexmap, offset, pat_position, pattern);
-        }
+        // if this is the end, we were successful
+        if (next_char == '\0') return true;
+
+        auto index_vec = indexmap.find(next_char);
+
+        // if the currect character is unknown, return false
+        if(index_vec == indexmap_end) return false;
+
+
+        // do a binary search through our available indices, check if the required
+        // position is present in the indices for this letter
+        auto it = std::lower_bound(
+            index_vec->second.begin(), index_vec->second.end(), offset+pat_position
+        );
+
+        // if the position was not found, we definitely don't have a match.
+        if (
+            it == index_vec->second.end() ||
+            *it != offset + pat_position // undefined behaviour!!!
+        ) return false;
     }
 
     return false;
-#endif
-
-
 }
 
 int SearchFatLobyte::seek( char const * filename )
