@@ -1,5 +1,5 @@
 
-CXXFLAGS += -std=c++0x -fno-deduce-init-list -O3
+CXXFLAGS += -std=c++0x -fno-deduce-init-list -Ofast -DNDBEBUG -msse2 -fno-rtti -fno-exceptions
 # -fno-deduce-init-list not quite sure what GCC wants with this warning, but stuff works so I'll
 # disable it.
 
