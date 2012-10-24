@@ -174,7 +174,7 @@ Experiment<Candidate>::Experiment(
     for (auto& i: input)
     {
         auto filedata = readFile(i.second);
-        if (filedata) _input_data.push_back({i.first, filedata});
+        if (filedata) _input_data.push_back(text_t{i.first, filedata});
     }
 }
 
