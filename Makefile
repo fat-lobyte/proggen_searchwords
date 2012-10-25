@@ -1,11 +1,17 @@
 
-CXXFLAGS += -std=c++0x -fno-deduce-init-list -Ofast -DNDBEBUG -msse2 -fno-rtti -fno-exceptions
-# -fno-deduce-init-list not quite sure what GCC wants with this warning, but stuff works so I'll
-# disable it.
+CXXFLAGS += -std=c++0x
+
+ifneq ($(DEBUG),)
+CXXFLAGS += -g
+else
+CXXFLAGS += -O3 -DNDBEBUG -msse2 -fno-rtti -fno-exceptions
+endif
+
 
 ifneq ($(DO_PROFILING),)
 CXXFLAGS += -pg
 endif
+
 
 DATAFILES = txt/
 OUTFILES = test_output1.txt test_output2.txt gmon.out profile.txt
