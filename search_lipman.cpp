@@ -1,7 +1,7 @@
 // search_std-strstr.cpp
 
 /*
- *   proggen_searchtexts
+ *   proggen_searchwords
  *   Copyright (C) 2011  Alexander Korsunsky
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -97,22 +97,18 @@ indexmap_t preparse(const char* text)
 
 void SearchFatLobyte::addText( char const * id, char const * text )
 {
-    _texts.emplace_back(
-        new TextInfo{id, preparse(text), 0}
-    );
+    _texts.emplace_back(new TextInfo{id, preparse(text), 0});
 }
 
 void SearchFatLobyte::addPattern( char const * pattern )
 {
-    _patterns.emplace_back(
-        new PatternInfo{pattern}
-    );
+    _patterns.emplace_back(new PatternInfo{pattern});
 }
 
-void SearchFatLobyte::clearPatterns( void )
+void SearchFatLobyte::clearPatterns(void)
 { _patterns.clear(); }
 
-
+#if 0
 void print_indexmap(const indexmap_t& indexmap)
 {
     for(const auto &p: indexmap)
@@ -122,7 +118,7 @@ void print_indexmap(const indexmap_t& indexmap)
         std::cout<<std::endl;
     }
 }
-
+#endif
 
 void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
 {
@@ -134,22 +130,24 @@ void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
         reorder_pattern(textinfo.indexmap, patterninfo.pattern);
 
     // "first" pattern character
-    auto pattern_ch_it = pattern.begin();
+    const auto pattern_begin_it = pattern.begin();
 
     // find the character in the index map
-    auto index_vec_it = textinfo.indexmap.find(pattern_ch_it->first);
+    auto index_vec_it = textinfo.indexmap.find(pattern_begin_it->first);
 
     // if the currect character is unknown, we didn't find it
     if(index_vec_it == indexmap_end) return;
     assert(!index_vec_it->second.empty()); // this shouldn't be possible
 
+
+
     // iterate over ALL the indices available for the first character
     for(std::size_t first_index: index_vec_it->second)
     {
-        pattern_ch_it = pattern.begin();
-        std::size_t offset = first_index - pattern_ch_it->second;
+        std::size_t offset = first_index - pattern_begin_it->second;
 
-        ++pattern_ch_it;
+        // create loop iterator starting at the second character
+        auto pattern_ch_it = pattern_begin_it; ++pattern_ch_it;
 
         // iterate through all available characters in the pattern
         for (;pattern_ch_it != pattern.end(); ++pattern_ch_it)
@@ -168,10 +166,9 @@ void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
             );
 
             // if the position was not found, we definitely don't have a match.
-            if (
-                it == index_vec->second.end() ||
-                *it != offset + pattern_ch_it->second // undefined behaviour!!!
-            ) goto NOTFOUND;
+            if (it == index_vec->second.end()) goto NOTFOUND;
+
+            if (*it != offset + pattern_ch_it->second) goto NOTFOUND;
         }
 
         // If we finished this loop, we've found something
