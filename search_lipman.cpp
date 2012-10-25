@@ -20,6 +20,7 @@
 #include "search_fatlobyte.hpp"
 
 #include <cstring>
+#include <cassert>
 #include <iostream>
 #include <fstream>
 #include <numeric>
@@ -38,6 +39,24 @@ struct TextInfo
 struct PatternInfo {
     char const* pattern;
 };
+
+
+std::vector<std::pair<char, std::size_t>> reorder_pattern(
+    const indexmap_t& indexmap,const char* pattern
+)
+{
+    std::vector<std::pair<char, std::size_t>> reordered;
+
+    // copy pattern verbatim
+    std::size_t pos = 0;
+    while(pattern[pos])
+    {
+        reordered.push_back(std::make_pair(pattern[pos], pos));
+        ++pos;
+    }
+
+    return reordered;
+}
 
 
 indexmap_t preparse(const char* text)
@@ -83,45 +102,62 @@ void print_indexmap(const indexmap_t& indexmap)
 }
 
 
-bool subsearch(
-    indexmap_t& indexmap,
-    std::size_t offset,
-    std::size_t pat_position,
-    const char* pattern
-)
+void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
 {
-    // std::cout<<offset<<':'<<pat_position<<'\n';
-    char next_char;
-    auto indexmap_end = indexmap.end();
+    // convenience pointer so we don't have to call the end() function each time
+    auto indexmap_end = textinfo.indexmap.end();
 
-    for (;; ++pat_position)
+    // create reordered pattern
+    std::vector<std::pair<char, std::size_t>> pattern =
+        reorder_pattern(textinfo.indexmap, patterninfo.pattern);
+
+    // "first" pattern character
+    auto pattern_ch_it = pattern.begin();
+
+    // find the character in the index map
+    auto index_vec_it = textinfo.indexmap.find(pattern_ch_it->first);
+
+    // if the currect character is unknown, we didn't find it
+    if(index_vec_it == indexmap_end) return;
+    assert(!index_vec_it->second.empty()); // this shouldn't be possible
+
+    // iterate over ALL the indices available for the first character
+    for(std::size_t first_index: index_vec_it->second)
     {
-        // get next character
-        next_char = pattern[pat_position];
+        pattern_ch_it = pattern.begin();
+        std::size_t offset = first_index - pattern_ch_it->second;
 
-        // if this is the end, we were successful
-        if (next_char == '\0') return true;
+        ++pattern_ch_it;
 
-        auto index_vec = indexmap.find(next_char);
+        // iterate through all available characters in the pattern
+        for (;pattern_ch_it != pattern.end(); ++pattern_ch_it)
+        {
+            // find character in the index map
+            auto index_vec = textinfo.indexmap.find(pattern_ch_it->first);
 
-        // if the currect character is unknown, return false
-        if(index_vec == indexmap_end) return false;
+            // if the currect character is unknown, we didn't find it
+            if(index_vec == indexmap_end) goto NOTFOUND;
 
+            // do a binary search through our available indices, check if the required
+            // position is present in the indices for this letter
+            auto it = std::lower_bound(
+                index_vec->second.begin(), index_vec->second.end(),
+                offset + pattern_ch_it->second
+            );
 
-        // do a binary search through our available indices, check if the required
-        // position is present in the indices for this letter
-        auto it = std::lower_bound(
-            index_vec->second.begin(), index_vec->second.end(), offset+pat_position
-        );
+            // if the position was not found, we definitely don't have a match.
+            if (
+                it == index_vec->second.end() ||
+                *it != offset + pattern_ch_it->second // undefined behaviour!!!
+            ) goto NOTFOUND;
+        }
 
-        // if the position was not found, we definitely don't have a match.
-        if (
-            it == index_vec->second.end() ||
-            *it != offset + pat_position // undefined behaviour!!!
-        ) return false;
+        // If we finished this loop, we've found something
+        ++textinfo.hit_count;
+
+    NOTFOUND:
+        ;
     }
-
-    return false;
 }
 
 int SearchFatLobyte::seek( char const * filename )
@@ -136,27 +172,9 @@ int SearchFatLobyte::seek( char const * filename )
 
     for (auto& cur_text: _texts)
     {
-        //std::cout<<" ###### Index for "<<cur_text->id<<" ###### ";
-        //print_indexmap(cur_text->indexmap);
-
         for (auto& cur_pat : _patterns)
-        {
-            //std::cout<<" ------- pattern: \""<<cur_pat<<"\" -------\n";
+            do_search(*cur_text, *cur_pat);
 
-            // if the first character is not part of the text,
-            // we didn't find anything!
-            if (!cur_text->indexmap.count(cur_pat->pattern[0])) continue;
-
-            // otherwise, check all indices for the first character
-            for (std::size_t offset: cur_text->indexmap[cur_pat->pattern[0]])
-            {
-                // perform the subsearch, report positives
-                if (subsearch(cur_text->indexmap, offset, 1, cur_pat->pattern))
-                    ++cur_text->hit_count;
-
-            }
-
-        }
 
         if (cur_text->hit_count)
             found_file<<cur_text->id<<'\t'<<cur_text->hit_count<<'\n';
