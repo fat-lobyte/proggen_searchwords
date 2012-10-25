@@ -69,6 +69,38 @@ void SearchFatLobyte::addPattern( char const * pattern )
 void SearchFatLobyte::clearPatterns(void)
 { _patterns.clear(); }
 
+inline bool expand_match(
+    const char* text, std::size_t match_index,
+    const char* pattern, std::size_t pattern_index
+)
+{
+    constexpr std::size_t matchwidth = 1;
+
+    const char* text_p;
+    const char* pattern_p;
+
+    // Search forward
+    text_p = text + match_index + matchwidth;
+    pattern_p = pattern + pattern_index + matchwidth;
+
+    while(*pattern_p)
+        if(*text_p++ != *pattern_p++) return false;
+
+#if 1
+    // search backwards
+    text_p = text + match_index - 1;
+    pattern_p = pattern + pattern_index - 1;
+
+    while(pattern_index)
+    {
+        if(*text_p-- != *pattern_p--) return false;
+        --pattern_index;
+    }
+#endif
+
+    return true;
+}
+
 
 void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
 {
@@ -87,26 +119,14 @@ void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
     // iterate over ALL the indices available for the first character
     for(std::size_t offset: index_vec_it->second)
     {
-        // get iterator to pattern characters
-        const char* pattern_it = patterninfo.pattern + 1;
+        if(!expand_match(textinfo.text, offset, patterninfo.pattern, 0))
+            goto NOTFOUND;
 
-        std::size_t pattern_inx = 1;
-
-
-        // expand match
-        while (*pattern_it)
-        {
-            if (textinfo.text[offset+pattern_inx] != *pattern_it)
-                goto NOTFOUND;
-
-            ++pattern_it; ++pattern_inx;
-        }
 
         // If we finished this loop, we've found something
         ++textinfo.hit_count;
 
-    NOTFOUND:
-        ;
+    NOTFOUND:;
     }
 }
 
