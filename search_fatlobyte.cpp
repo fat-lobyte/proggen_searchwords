@@ -27,6 +27,7 @@
 #include <numeric>
 #include <algorithm>
 #include <tuple>
+#include <unordered_map>
 
 #ifndef INDEX_TYPE
     typedef std::uint32_t index_type;
@@ -47,7 +48,7 @@ template <> struct blocktype<4> { typedef std::int32_t type; };
 template <> struct blocktype<8> { typedef std::int64_t type; };
 
 template <unsigned Blocksize>
-using indexmap_t = std::map<typename blocktype<Blocksize>::type, std::vector<index_type>> ;
+using indexmap_t = std::unordered_map<typename blocktype<Blocksize>::type, std::vector<index_type>> ;
 
 typedef std::tuple<
         indexmap_t<1>[1],
