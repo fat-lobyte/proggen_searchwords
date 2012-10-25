@@ -34,6 +34,10 @@
     typedef INDEX_TYPE index_type;
 #endif
 
+#ifndef MAX_BLOCKSIZE
+#   define MAX_BLOCKSIZE 4
+#endif
+
 
 template <unsigned> struct blocktype {};
 
@@ -48,7 +52,8 @@ using indexmap_t = std::map<typename blocktype<Blocksize>::type, std::vector<ind
 typedef std::tuple<
         indexmap_t<1>[1],
         indexmap_t<2>[2],
-        indexmap_t<4>[4]
+        indexmap_t<4>[4],
+        indexmap_t<8>[8]
 > indexmap_tuple_type;
 
 struct TextInfo
@@ -65,19 +70,42 @@ struct PatternInfo {
 };
 
 
-template <unsigned Blocksize>
-void create_indexmap(indexmap_t<Blocksize> indexmap_array[], const char* text)
+constexpr unsigned power_of_two(unsigned x) // sorta log_2()
 {
+    return
+        (x) ? // if (x != 0) {
+            ((x-1) ? // if (x-1 != 0) {
+                1+power_of_two(x >> 1)
+            : // } else {
+            0) // }
+        : // } else {
+            0
+        // }
+        ;
+}
+
+
+template <unsigned Blocksize>
+void create_indexmaps(indexmap_tuple_type& indexmap_tuple, const char* text)
+{
+    constexpr unsigned indexmap_index = power_of_two(Blocksize);
+
     index_type pos = 0;
 
     while (*(text+pos+Blocksize))
     {
-        indexmap_array[pos % Blocksize][
+        std::get<indexmap_index>(indexmap_tuple)[pos % Blocksize][
             *reinterpret_cast<const typename blocktype<Blocksize>::type*>(text+pos)
         ].push_back(pos);
         ++pos;
     }
+
+    create_indexmaps<Blocksize/2>(indexmap_tuple, text);
 }
+
+
+template <>
+void create_indexmaps<0>(indexmap_tuple_type&, const char*) {}
 
 void SearchFatLobyte::addText( char const * id, char const * text )
 {
@@ -87,9 +115,7 @@ void SearchFatLobyte::addText( char const * id, char const * text )
         0
     }};
 
-    create_indexmap<1>(std::get<0>(textinfo->indexmaps), text);
-    create_indexmap<2>(std::get<1>(textinfo->indexmaps), text);
-    create_indexmap<4>(std::get<2>(textinfo->indexmaps), text);
+    create_indexmaps<MAX_BLOCKSIZE>(textinfo->indexmaps, text);
 
     _texts.emplace_back(std::move(textinfo));
 }
@@ -136,17 +162,7 @@ inline bool expand_match(
     return true;
 }
 
-constexpr unsigned power_of_two(unsigned x) // sorta log_2()
-{
-    return
-        (x) ? // if (x != 0) {
-            (x-1 ? 1+power_of_two(x >> 1) : 0)
-        : // else
-            0
-        ;
-}
 
-#if 1
 template <unsigned Blocksize>
 void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
 {
@@ -195,36 +211,6 @@ void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
 template <>
 void do_search<0>(TextInfo& textinfo, const PatternInfo& patterninfo) {}
 
-#else
-
-void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
-{
-    // convenience pointer so we don't have to call the end() function each time
-    auto indexmap_end = std::get<0>(textinfo.indexmaps)[0].end();
-
-
-    // find the first character in the index map
-    auto index_vec_it = std::get<0>(textinfo.indexmaps)[0].find(patterninfo.pattern[0]);
-
-    // if the currect character is unknown, we didn't find it
-    if(index_vec_it == indexmap_end) return;
-    assert(!index_vec_it->second.empty()); // this shouldn't be possible
-
-
-    // iterate over ALL the indices available for the first character
-    for(index_type offset: index_vec_it->second)
-    {
-        if(!expand_match(textinfo.text, offset, patterninfo.pattern, 0))
-            goto NOTFOUND;
-
-
-        // If we finished this loop, we've found something
-        ++textinfo.hit_count;
-
-    NOTFOUND:;
-    }
-}
-#endif
 
 int SearchFatLobyte::seek( char const * filename )
 {
@@ -239,7 +225,7 @@ int SearchFatLobyte::seek( char const * filename )
     for (auto& cur_text: _texts)
     {
         for (auto& cur_pat : _patterns)
-            do_search<4>(*cur_text, *cur_pat);
+            do_search<MAX_BLOCKSIZE>(*cur_text, *cur_pat);
 
 
         if (cur_text->hit_count)
