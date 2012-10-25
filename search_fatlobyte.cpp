@@ -21,20 +21,37 @@
 
 #include <cstring>
 #include <cassert>
+#include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <numeric>
 #include <algorithm>
 
 
-typedef std::map<char, std::vector<std::size_t>> indexmap_t;
+typedef std::uint32_t index_type;
+
+template <std::size_t>
+struct blocktype
+{
+};
+
+template <> struct blocktype<1> { typedef char type; };
+template <> struct blocktype<2> { typedef std::int16_t type; };
+template <> struct blocktype<4> { typedef std::int32_t type; };
+template <> struct blocktype<8> { typedef std::int64_t type; };
+
+template <std::size_t Blocksize>
+using indexmap_t = std::map<typename blocktype<Blocksize>::type, std::vector<index_type>> ;
+
 
 struct TextInfo
 {
     char const* id;
     char const* text;
-    indexmap_t indexmap;
-    std::size_t hit_count;
+    indexmap_t<1> indexmap1[1];
+    indexmap_t<2> indexmap2[2];
+    indexmap_t<4> indexmap4[4];
+    index_type hit_count;
 };
 
 struct PatternInfo {
@@ -42,23 +59,37 @@ struct PatternInfo {
 };
 
 
-indexmap_t preparse(const char* text)
+template <std::size_t Blocksize>
+void create_indexmap(indexmap_t<Blocksize> indexmap_array[], const char* text)
 {
-    indexmap_t indexmap;
+    index_type pos = 0;
 
-    std::size_t pos=0;
-    while(text[pos])
+    while (*(text+pos+Blocksize))
     {
-        indexmap[text[pos]].push_back(pos);
+        indexmap_array[pos % Blocksize][
+            *reinterpret_cast<const typename blocktype<Blocksize>::type*>(text+pos)
+        ].push_back(pos);
         ++pos;
     }
-
-    return indexmap;
 }
+
 
 void SearchFatLobyte::addText( char const * id, char const * text )
 {
-    _texts.emplace_back(new TextInfo{id, text, preparse(text), 0});
+    std::unique_ptr<TextInfo> textinfo{new TextInfo{
+        id, text,
+        {{}},
+        {{}, {}},
+        {{}, {}, {}, {}},
+        0
+    }};
+
+
+    create_indexmap<1>(textinfo->indexmap1, text);
+    create_indexmap<2>(textinfo->indexmap2, text);
+    create_indexmap<4>(textinfo->indexmap4, text);
+
+    _texts.emplace_back(std::move(textinfo));
 }
 
 void SearchFatLobyte::addPattern( char const * pattern )
@@ -70,11 +101,11 @@ void SearchFatLobyte::clearPatterns(void)
 { _patterns.clear(); }
 
 inline bool expand_match(
-    const char* text, std::size_t match_index,
-    const char* pattern, std::size_t pattern_index
+    const char* text, index_type match_index,
+    const char* pattern, index_type pattern_index
 )
 {
-    constexpr std::size_t matchwidth = 1;
+    constexpr index_type matchwidth = 1;
 
     const char* text_p;
     const char* pattern_p;
@@ -105,11 +136,11 @@ inline bool expand_match(
 void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
 {
     // convenience pointer so we don't have to call the end() function each time
-    auto indexmap_end = textinfo.indexmap.end();
+    auto indexmap_end = textinfo.indexmap1[0].end();
 
 
     // find the first character in the index map
-    auto index_vec_it = textinfo.indexmap.find(patterninfo.pattern[0]);
+    auto index_vec_it = textinfo.indexmap1[0].find(patterninfo.pattern[0]);
 
     // if the currect character is unknown, we didn't find it
     if(index_vec_it == indexmap_end) return;
@@ -117,7 +148,7 @@ void do_search(TextInfo& textinfo, const PatternInfo& patterninfo)
 
 
     // iterate over ALL the indices available for the first character
-    for(std::size_t offset: index_vec_it->second)
+    for(index_type offset: index_vec_it->second)
     {
         if(!expand_match(textinfo.text, offset, patterninfo.pattern, 0))
             goto NOTFOUND;
@@ -151,8 +182,8 @@ int SearchFatLobyte::seek( char const * filename )
 
     }
 
-    return std::accumulate(_texts.begin(), _texts.end(), std::size_t(0), // begin, end, init
-        [](std::size_t& acc, std::unique_ptr<TextInfo>& el) { return acc + el->hit_count; }
+    return std::accumulate(_texts.begin(), _texts.end(), index_type(0), // begin, end, init
+        [](index_type& acc, std::unique_ptr<TextInfo>& el) { return acc + el->hit_count; }
     );
 }
 
