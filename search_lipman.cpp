@@ -55,6 +55,28 @@ std::vector<std::pair<char, std::size_t>> reorder_pattern(
         ++pos;
     }
 
+    // sort by lowest number of occurances in the index map
+    std::sort(reordered.begin(), reordered.end(),
+        [&indexmap](std::pair<char, std::size_t> lhs, std::pair<char, std::size_t> rhs)
+        {
+            // Get index vector for lhs and rhs
+            auto lhs_index_vec_it = indexmap.find(lhs.first);
+            auto rhs_index_vec_it = indexmap.find(rhs.first);
+
+            // If the LHS is empty, it definitely goes before the RHS
+            if (lhs_index_vec_it == indexmap.end()) return true;
+
+            // If the RHS is empty, it definitely goes before the LHS
+            if (rhs_index_vec_it == indexmap.end()) return false;
+
+
+            // if none of those were empty, we check for the sizes of the index
+            // vectors.
+            return (lhs_index_vec_it->second.size() < rhs_index_vec_it->second.size());
+
+        }
+    );
+
     return reordered;
 }
 
