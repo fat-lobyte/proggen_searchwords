@@ -16,7 +16,7 @@ endif
 DATAFILES = txt/
 OUTFILES = test_output1.txt test_output2.txt gmon.out profile.txt
 
-VARIANTS = std-strstr straightforward lipman
+VARIANTS = std-strstr straightforward lipman fatlobyte
 TARGETS =  $(foreach var,$(VARIANTS),searchwords_$(var))
 
 all: $(TARGETS)
